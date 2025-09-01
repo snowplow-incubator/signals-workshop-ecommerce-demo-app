@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { initializeSnowplow, trackProductViewEvent, trackAddToCartEvent } from './snowplow';
 
-import { addInterventionHandlers } from '@snowplow/signals-browser-plugin';
+import { addInterventionHandlers, Intervention } from '@snowplow/signals-browser-plugin';
 
 interface Product {
   id: number;
@@ -15,7 +15,7 @@ interface Product {
   rating: number;
 }
 
-interface Intervention {
+interface BannerIntervention {
   type: string;
   message: string;
   code?: string;
@@ -89,7 +89,7 @@ function ProductModal({ product, onClose }: ProductModalProps) {
 }
 
 interface InterventionBannerProps {
-  intervention: Intervention | null;
+  intervention: BannerIntervention | null;
   onClose: () => void;
 }
 
@@ -151,7 +151,7 @@ function ProductCard({ product, onViewProduct }: ProductCardProps) {
 function App() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [intervention, setIntervention] = useState<Intervention | null>(null);
+  const [intervention, setIntervention] = useState<BannerIntervention | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   useEffect(() => {
@@ -169,7 +169,7 @@ function App() {
       });
 
     addInterventionHandlers({
-      handler: (intervention) => {
+      handler: (intervention: Intervention) => {
         console.log('intervention received!', intervention);
 
         if (intervention.name === 'cart_abandonment') {
