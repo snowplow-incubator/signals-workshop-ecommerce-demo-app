@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { initializeSnowplow, trackProductViewEvent, trackAddToCartEvent } from './snowplow';
 
-import { addInterventionHandlers, Intervention } from '@snowplow/signals-browser-plugin';
-
 interface Product {
   id: number;
   title: string;
@@ -168,28 +166,7 @@ function App() {
         setLoading(false);
       });
 
-    addInterventionHandlers({
-      handler: (intervention: Intervention) => {
-        console.log('intervention received!', intervention);
-
-        if (intervention.name === 'cart_abandonment') {
-          setIntervention({ type: 'cart_abandonment', message: 'Don\'t forget your items in cart!' });
-        }
-        else if (intervention.name === 'discount') {
-          setIntervention({ type: 'discount', message: '10% off your next purchase!', code: 'SAVE10' });
-        }
-        else if (intervention.name === 'free_shipping') {
-          setIntervention({ type: 'free_shipping', message: 'Free shipping on orders over $100!', code: 'FREE' });
-        }
-        else {
-          console.log('unknown intervention', intervention);
-        }
-
-        setTimeout(() => {
-          setIntervention(null);
-        }, 60000);
-      },
-    });
+    // TODO: add intervention handlers
   }, []);
 
   const closeIntervention = () => {

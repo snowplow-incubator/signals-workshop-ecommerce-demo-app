@@ -1,9 +1,5 @@
 import { newTracker, trackPageView } from '@snowplow/browser-tracker';
 import { SnowplowEcommercePlugin, trackAddToCart, trackProductView } from '@snowplow/browser-plugin-snowplow-ecommerce';
-import {
-  SignalsInterventionsPlugin,
-  subscribeToInterventions
-} from '@snowplow/signals-browser-plugin';
 
 interface Product {
   id: number;
@@ -23,15 +19,13 @@ export const initializeSnowplow = () => {
     },
     plugins: [
       SnowplowEcommercePlugin(),
-      SignalsInterventionsPlugin(),
+      // TODO: add SignalsInterventionsPlugin
     ],
   });
 
   trackPageView();
 
-  subscribeToInterventions({
-    endpoint: 'd0a9ba0f-893a-445f-91a5-a1abf1359d34.svc.snplow.net',
-  });
+  // TODO: add subscribeToInterventions
 };
 
 export const trackProductViewEvent = (product: Product) => {
