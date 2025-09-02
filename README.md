@@ -2,6 +2,9 @@
 
 A comprehensive e-commerce demo application for demonstrating Snowplow Signals integration during workshops. This app showcases how real-time user behavior can trigger personalized interventions based on calculated attributes.
 
+## Repository owner
+@snowplow-incubator/com-snowplowanalytics-engineering-digital_analytics
+
 ## Features
 
 - 🛍️ Product catalog with modal view fetched from dummyjson.com API
