@@ -564,12 +564,6 @@ body {
   font-size: 14px;
 }
 
-.user-segment {
-  font-size: 12px;
-  color: #666;
-  margin-top: 2px;
-}
-
 .dropdown-arrow {
   transition: transform 0.2s;
   color: #666;
@@ -703,5 +697,403 @@ body {
     font-size: 18px;
     width: 28px;
     height: 28px;
+  }
+}
+
+/* Personalization Note in Header */
+.personalization-note {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 20px;
+  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.personalization-icon {
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.1); }
+}
+
+/* Membership Offers Component */
+.membership-offers {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.membership-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+  font-size: 14px;
+}
+
+.membership-header {
+  margin-bottom: 15px;
+}
+
+.membership-tier {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.tier-icon {
+  font-size: 24px;
+}
+
+.lifetime-value {
+  background: rgba(255,255,255,0.8);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.ltv-label {
+  color: #666;
+  margin-right: 6px;
+}
+
+.ltv-amount {
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.tier-progress {
+  margin: 15px 0;
+}
+
+.progress-bar {
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 5px;
+}
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+}
+
+.membership-benefits h4 {
+  margin: 15px 0 8px 0;
+  color: #333;
+  font-size: 14px;
+}
+
+.membership-benefits ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.membership-benefits li {
+  padding: 4px 0;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.benefit-check {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.special-offer {
+  margin-top: 15px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.offer-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.offer-content p {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+}
+
+.offer-button {
+  background: rgba(255,255,255,0.2);
+  color: white;
+  border: 1px solid rgba(255,255,255,0.3);
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background-color 0.2s;
+}
+
+.offer-button:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+.offer-button.platinum {
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  color: #333;
+  border: none;
+}
+
+.engagement-stats {
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid rgba(255,255,255,0.2);
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 3px 0;
+  font-size: 12px;
+}
+
+.stat-label {
+  color: #666;
+}
+
+.stat-value {
+  font-weight: bold;
+  color: #333;
+}
+
+/* Cart Insights Component */
+.cart-insights {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.insights-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+  font-size: 14px;
+}
+
+.insights-header h3 {
+  margin: 0 0 5px 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.insights-header p {
+  margin: 0 0 15px 0;
+  color: #666;
+  font-size: 13px;
+}
+
+.shopping-stats {
+  margin-bottom: 20px;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: 10px;
+}
+
+.stat-card {
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.stat-icon {
+  font-size: 20px;
+  margin-bottom: 5px;
+}
+
+.stat-number {
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.behavior-insights h4 {
+  margin: 20px 0 10px 0;
+  color: #333;
+  font-size: 14px;
+}
+
+.insight-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+}
+
+.insight-item.positive {
+  background: #e8f5e8;
+  border-left: 3px solid #4CAF50;
+}
+
+.insight-item.neutral {
+  background: #fff3e0;
+  border-left: 3px solid #FF9800;
+}
+
+.insight-item.suggestion {
+  background: #e3f2fd;
+  border-left: 3px solid #2196F3;
+}
+
+.insight-icon {
+  font-size: 16px;
+}
+
+.insight-content {
+  flex: 1;
+}
+
+.insight-message {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.insight-detail {
+  font-size: 11px;
+  color: #666;
+  margin-top: 2px;
+}
+
+.recommendations h4 {
+  margin: 20px 0 10px 0;
+  color: #333;
+  font-size: 14px;
+}
+
+.recommendation-card {
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.recommendation-card.welcome {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+}
+
+.recommendation-card.help {
+  background: linear-gradient(135deg, #2196F3, #1976D2);
+  color: white;
+}
+
+.recommendation-card.upgrade {
+  background: linear-gradient(135deg, #FF9800, #F57C00);
+  color: white;
+}
+
+.rec-content {
+  flex: 1;
+}
+
+.rec-title {
+  font-size: 13px;
+  font-weight: bold;
+  margin-bottom: 3px;
+}
+
+.rec-message {
+  font-size: 11px;
+  opacity: 0.9;
+}
+
+.rec-action {
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: inherit;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: background-color 0.2s;
+}
+
+.rec-action:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+.interest-note {
+  margin-top: 15px;
+  padding: 10px;
+  background: #fef7e0;
+  border-radius: 6px;
+  border-left: 3px solid #FF9800;
+  font-size: 12px;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Responsive updates */
+@media (max-width: 1024px) {
+  .stat-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .membership-offers,
+  .cart-insights {
+    padding: 15px;
+  }
+  
+  .stat-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .recommendation-card {
+    flex-direction: column;
+    gap: 8px;
+    text-align: center;
   }
 }

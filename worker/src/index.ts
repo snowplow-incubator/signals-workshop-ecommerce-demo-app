@@ -52,10 +52,8 @@ async function fetchAuthToken(apiKey: string, apiKeyId: string, orgId: string): 
 }
 
 // Fetch user attributes from Snowplow Signals API
-async function fetchUserAttributes(authToken: string, signalsApiUrl: string, userId: string): Promise<Record<string, any>> {
+async function fetchUserAttributes(authToken: string, signalsApiUrl: string, service: string, attributeKeys: Record<string, string[]>): Promise<Record<string, any>> {
   const apiUrl = `${signalsApiUrl}/api/v1/get-online-attributes`;
-
-  console.log(`Fetching user attributes from Signals API for user: ${userId}`);
 
   try {
     const response = await fetch(apiUrl, {
@@ -65,10 +63,8 @@ async function fetchUserAttributes(authToken: string, signalsApiUrl: string, use
         'Content-Type': 'application/json; charset=utf-8'
       },
       body: JSON.stringify({
-        service: 'ecom_attributes',
-        attribute_keys: {
-          user_id: [userId]
-        }
+        service: service,
+        attribute_keys: attributeKeys
       })
     });
 
@@ -149,7 +145,6 @@ function addCORSHeaders(response: Response): Response {
 
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    // Handle CORS preflight
     const corsResponse = handleCORS(request);
     if (corsResponse) {
       return corsResponse;
@@ -158,20 +153,7 @@ export default {
     const url = new URL(request.url);
 
     try {
-      // Health check endpoint
-      if (url.pathname === '/health') {
-        return addCORSHeaders(new Response(JSON.stringify({
-          status: 'healthy',
-          timestamp: new Date().toISOString(),
-          environment: env.ENVIRONMENT
-        }), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        }));
-      }
-
-      // User attributes endpoint
-      if (url.pathname === '/api/user-attributes') {
+      if (url.pathname === '/attributes') {
         if (request.method !== 'GET') {
           return addCORSHeaders(new Response(JSON.stringify({
             error: 'Method not allowed'
@@ -181,7 +163,6 @@ export default {
           }));
         }
 
-        // Validate secrets are available
         if (!env.API_KEY || !env.API_KEY_ID || !env.ORG_ID || !env.SIGNALS_API_URL) {
           return addCORSHeaders(new Response(JSON.stringify({
             error: 'API credentials not configured (missing API_KEY, API_KEY_ID, ORG_ID, or SIGNALS_API_URL)'
@@ -191,40 +172,24 @@ export default {
           }));
         }
 
-        // Get user ID from query params (optional)
-        const userId = url.searchParams.get('userId');
-        if (!userId) {
-          return addCORSHeaders(new Response(JSON.stringify({
-            error: 'User ID is required'
-          }), {
-            status: 400,
-            headers: { 'Content-Type': 'application/json' }
-          }));
+        const authToken = await getAuthToken(env);
+        let userAttributes = {};
+        const userId = url.searchParams.get('user_id');
+        if (userId) {
+          userAttributes = {
+            ...userAttributes,
+            ...(await fetchUserAttributes(authToken, env.SIGNALS_API_URL, 'batch_attributes', { user_id: [userId] }))
+          }
+        }
+        const domainUserId = url.searchParams.get('domain_userid');
+        if (domainUserId) {
+          userAttributes = {
+            ...userAttributes,
+            ...(await fetchUserAttributes(authToken, env.SIGNALS_API_URL, 'ecom_attributes', { domain_userid: [domainUserId] }))
+          }
         }
 
-        // Get auth token (cached or fresh)
-        const authToken = await getAuthToken(env);
-
-        // Fetch user attributes using the auth token
-        const userAttributes = await fetchUserAttributes(authToken, env.SIGNALS_API_URL, userId);
-
         return addCORSHeaders(new Response(JSON.stringify(userAttributes), {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' }
-        }));
-      }
-
-      // Cache status endpoint (for debugging)
-      if (url.pathname === '/api/cache-status') {
-        const cachedToken = await env.AUTH_CACHE.get(AUTH_TOKEN_KEY);
-        const cachedExpiry = await env.AUTH_CACHE.get(AUTH_TOKEN_EXPIRY_KEY);
-
-        return addCORSHeaders(new Response(JSON.stringify({
-          hasToken: !!cachedToken,
-          tokenPreview: cachedToken ? `${cachedToken.substr(0, 10)}...` : null,
-          expiryTime: cachedExpiry ? new Date(parseInt(cachedExpiry)).toISOString() : null,
-          isValid: cachedExpiry ? Date.now() < parseInt(cachedExpiry) : false
-        }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' }
         }));
@@ -234,9 +199,7 @@ export default {
       return addCORSHeaders(new Response(JSON.stringify({
         error: 'Not found',
         availableEndpoints: [
-          '/health',
-          '/api/user-attributes',
-          '/api/cache-status'
+          '/attributes'
         ]
       }), {
         status: 404,

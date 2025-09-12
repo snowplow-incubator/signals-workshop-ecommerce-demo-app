@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { initializeSnowplow, trackProductViewEvent, trackAddToCartEvent, updateSnowplowUser } from './snowplow';
-import UserAttributes from './components/UserAttributes';
 import UserSwitcher from './components/UserSwitcher';
+import MembershipOffers from './components/MembershipOffers';
+import CartInsights from './components/CartInsights';
 import { UserProvider, useUser } from './contexts/UserContext';
+import { PersonalizationProvider, usePersonalization } from './contexts/PersonalizationContext';
 
 import { addInterventionHandlers, Intervention } from '@snowplow/signals-browser-plugin';
-import { trackPageView } from '@snowplow/browser-tracker';
 
 interface Product {
   id: number;
@@ -154,6 +155,7 @@ function ProductCard({ product, onViewProduct }: ProductCardProps) {
 
 function AppContent() {
   const { currentUser } = useUser();
+  const { recommendedCategory, isHighValueCustomer } = usePersonalization();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [intervention, setIntervention] = useState<BannerIntervention | null>(null);
@@ -162,9 +164,7 @@ function AppContent() {
   useEffect(() => {
     // Initialize Snowplow with current user
     initializeSnowplow(currentUser?.id);
-    if (currentUser) {
-      trackPageView();
-    }
+    // Initialize Snowplow tracking
 
     fetch('https://dummyjson.com/products')
       .then(response => response.json())
@@ -227,6 +227,26 @@ function AppContent() {
     setSelectedProduct(null);
   };
 
+  // Filter products based on user's main interest
+  const getFilteredProducts = () => {
+    if (!recommendedCategory) return products.slice(0, 12);
+    
+    // Try to match category with user's main interest
+    const filtered = products.filter(product => 
+      product.category.toLowerCase().includes(recommendedCategory.toLowerCase()) ||
+      product.title.toLowerCase().includes(recommendedCategory.toLowerCase())
+    );
+    
+    // If we have enough filtered products, show them; otherwise mix with general products
+    if (filtered.length >= 6) {
+      return [...filtered.slice(0, 8), ...products.filter(p => !filtered.includes(p)).slice(0, 4)];
+    }
+    
+    return [...filtered, ...products.filter(p => !filtered.includes(p))].slice(0, 12);
+  };
+
+  const displayedProducts = getFilteredProducts();
+
   if (loading) {
     return (
       <div className="app">
@@ -241,18 +261,24 @@ function AppContent() {
 
       <header className="header">
         <h1>🛍️ Signals Workshop E-Shop</h1>
-        <p>Demo application showcasing Snowplow Signals integration</p>
+        <p>Demo application showcasing Snowplow Signals personalization</p>
+        {recommendedCategory && (
+          <div className="personalization-note">
+            <span className="personalization-icon">✨</span>
+            <span>Showing products tailored to your interest in {recommendedCategory}</span>
+          </div>
+        )}
       </header>
 
       <div className="main-content">
         <aside className="sidebar">
           <UserSwitcher />
-          <UserAttributes />
+          {isHighValueCustomer ? <MembershipOffers /> : <CartInsights />}
         </aside>
 
         <main className="products-section">
           <div className="products-grid">
-            {products.slice(0, 12).map(product => (
+            {displayedProducts.map(product => (
               <ProductCard key={product.id} product={product} onViewProduct={handleViewProduct} />
             ))}
           </div>
@@ -267,7 +293,9 @@ function AppContent() {
 function App() {
   return (
     <UserProvider>
-      <AppContent />
+      <PersonalizationProvider>
+        <AppContent />
+      </PersonalizationProvider>
     </UserProvider>
   );
 }

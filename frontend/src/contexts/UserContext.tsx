@@ -5,7 +5,6 @@ export interface User {
   name: string;
   email: string;
   avatar: string;
-  segment: string;
   description: string;
 }
 
@@ -18,44 +17,46 @@ export interface UserContextType {
 // Predefined user accounts for the demo
 export const PREDEFINED_USERS: User[] = [
   {
+    id: 'anonymous',
+    name: 'Anonymous',
+    email: 'anonymous@example.com',
+    avatar: '👤',
+    description: 'Anonymous user'
+  },
+  {
     id: 'user_001',
     name: 'Alex Johnson',
     email: 'alex.johnson@example.com',
     avatar: '👤',
-    segment: 'Premium Customer',
     description: 'High-value customer with frequent purchases'
   },
   {
-    id: 'b2d4c8e1-9f3a-4b7c-8d2e-1a5f6c9b8e7d',
+    id: 'user_002',
     name: 'Sarah Williams',
     email: 'sarah.williams@example.com',
     avatar: '👩',
-    segment: 'New Customer',
     description: 'Recently signed up, exploring products'
   },
   {
-    id: 'c5e8a1b4-2d6f-4c9e-7b1a-9e5f2c8d6b3a',
+    id: 'user_003',
     name: 'Mike Chen',
     email: 'mike.chen@example.com',
     avatar: '👨',
-    segment: 'Regular Customer',
     description: 'Consistent buyer with moderate spending'
   },
   {
-    id: 'd9f2b5c8-7a1e-4d3b-6c9f-3e8a1b7d5c2f',
+    id: 'user_004',
     name: 'Emma Davis',
     email: 'emma.davis@example.com',
     avatar: '👩‍💼',
-    segment: 'VIP Customer',
     description: 'Top-tier customer with exclusive preferences'
   },
   {
-    id: 'e1a7d4b9-5c2f-4e8b-9d1c-6f3a8b5e7d4c',
-    name: 'Guest User',
-    email: 'guest@example.com',
+    id: 'user_005',
+    name: 'Jeremy Johnson',
+    email: 'jeremy.johnson@example.com',
     avatar: '👤',
-    segment: 'Anonymous',
-    description: 'Browsing without account'
+    description: 'New user, browsing the site'
   }
 ];
 

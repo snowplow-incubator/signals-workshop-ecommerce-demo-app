@@ -38,7 +38,6 @@ function UserSwitcher({ className = '' }: UserSwitcherProps) {
             <span className="user-avatar">{currentUser.avatar}</span>
             <div className="user-details">
               <div className="user-name">{currentUser.name}</div>
-              <div className="user-segment">{currentUser.segment}</div>
             </div>
           </div>
           <span className={`dropdown-arrow ${isOpen ? 'open' : ''}`}>▼</span>
@@ -58,7 +57,6 @@ function UserSwitcher({ className = '' }: UserSwitcherProps) {
                 <span className="user-avatar">{user.avatar}</span>
                 <div className="user-details">
                   <div className="user-name">{user.name}</div>
-                  <div className="user-segment">{user.segment}</div>
                   <div className="user-description">{user.description}</div>
                 </div>
                 {currentUser.id === user.id && (

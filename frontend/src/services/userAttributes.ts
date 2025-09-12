@@ -1,9 +1,20 @@
 // User Attributes Service
 // Handles communication with the CloudFlare worker for user attributes
 
+import { tracker } from '../snowplow';
+
 export interface UserAttributesError {
   error: string;
   message?: string;
+}
+
+export interface UserAttributes {
+  main_interest: string | null;
+  recommendation_score: number | null;
+  loyalty_segment: string | null;
+  count_product_views: number | null;
+  count_add_to_cart: number | null;
+  total_cart_value: number | null;
 }
 
 // Configuration for the worker endpoint
@@ -21,11 +32,15 @@ class UserAttributesService {
    * @param userId Optional user ID to fetch attributes for
    * @returns Promise with user attributes or throws error
    */
-  async getUserAttributes(userId?: string): Promise<Record<string, any>> {
+  async getUserAttributes(userId?: string): Promise<UserAttributes> {
     try {
-      const url = new URL('/api/user-attributes', this.baseUrl);
+      const url = new URL('/attributes', this.baseUrl);
       if (userId) {
-        url.searchParams.set('userId', userId);
+        url.searchParams.set('user_id', userId);
+      }
+      const domainUserId = tracker?.getDomainUserId();
+      if (domainUserId) {
+        url.searchParams.set('domain_userid', domainUserId);
       }
 
       console.log(`Fetching user attributes from: ${url.toString()}`);
@@ -43,8 +58,11 @@ class UserAttributesService {
       }
 
       const data: Record<string, any> = await response.json();
+      Object.keys(data).forEach((key) => {
+        data[key] = data[key][0];
+      });
       console.log('User attributes received:', data);
-      return data;
+      return data as UserAttributes;
     } catch (error) {
       console.error('Error fetching user attributes:', error);
       if (error instanceof Error) {

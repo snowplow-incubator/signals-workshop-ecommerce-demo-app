@@ -1,4 +1,4 @@
-import { newTracker, setUserId, clearUserData } from '@snowplow/browser-tracker';
+import { newTracker, setUserId, clearUserData, BrowserTracker } from '@snowplow/browser-tracker';
 import { SnowplowEcommercePlugin, trackAddToCart, trackProductView } from '@snowplow/browser-plugin-snowplow-ecommerce';
 import {
   SignalsInterventionsPlugin,
@@ -17,10 +17,11 @@ const SIGNALS_API_URL = process.env.REACT_APP_SIGNALS_API_URL || 'https://your-s
 const SNOWPLOW_COLLECTOR_URL = process.env.REACT_APP_SNOWPLOW_COLLECTOR_URL || 'https://collector-sales-aws.snowplow.io';
 
 let isInitialized = false;
+export let tracker: BrowserTracker | undefined | null = undefined;
 
 export const initializeSnowplow = (userId?: string) => {
   if (!isInitialized) {
-    newTracker('sp', SNOWPLOW_COLLECTOR_URL, {
+    tracker = newTracker('sp', SNOWPLOW_COLLECTOR_URL, {
       appId: 'ai_demo',
       discoverRootDomain: true,
       cookieSameSite: 'Lax',
@@ -48,10 +49,10 @@ export const initializeSnowplow = (userId?: string) => {
 
 export const updateSnowplowUser = (userId: string, userEmail?: string) => {
   console.log('Updating Snowplow user:', userId);
-  
+
   // Clear previous user data
   clearUserData();
-  
+
   // Set new user ID
   setUserId(userId);
 };

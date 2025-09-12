@@ -129,7 +129,6 @@ Retrieves user attributes. Automatically handles auth token fetching and caching
 {
   "userId": "user_abc123",
   "attributes": {
-    "segment": "premium",
     "preferences": {
       "newsletter": true,
       "notifications": false,
