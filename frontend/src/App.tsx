@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { initializeSnowplow, trackProductViewEvent, trackAddToCartEvent } from './snowplow';
+import { initializeSnowplow, trackProductViewEvent, trackAddToCartEvent, updateSnowplowUser } from './snowplow';
+import UserAttributes from './components/UserAttributes';
+import UserSwitcher from './components/UserSwitcher';
+import { UserProvider, useUser } from './contexts/UserContext';
 
 import { addInterventionHandlers, Intervention } from '@snowplow/signals-browser-plugin';
+import { trackPageView } from '@snowplow/browser-tracker';
 
 interface Product {
   id: number;
@@ -148,14 +152,19 @@ function ProductCard({ product, onViewProduct }: ProductCardProps) {
   );
 }
 
-function App() {
+function AppContent() {
+  const { currentUser } = useUser();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [intervention, setIntervention] = useState<BannerIntervention | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   useEffect(() => {
-    initializeSnowplow();
+    // Initialize Snowplow with current user
+    initializeSnowplow(currentUser?.id);
+    if (currentUser) {
+      trackPageView();
+    }
 
     fetch('https://dummyjson.com/products')
       .then(response => response.json())
@@ -190,6 +199,20 @@ function App() {
         }, 60000);
       },
     });
+  }, [currentUser]);
+
+  // Listen for user changes and update Snowplow
+  useEffect(() => {
+    const handleUserChange = (event: CustomEvent) => {
+      const { user } = event.detail;
+      updateSnowplowUser(user.id, user.email);
+    };
+
+    window.addEventListener('userChanged', handleUserChange as EventListener);
+
+    return () => {
+      window.removeEventListener('userChanged', handleUserChange as EventListener);
+    };
   }, []);
 
   const closeIntervention = () => {
@@ -221,16 +244,31 @@ function App() {
         <p>Demo application showcasing Snowplow Signals integration</p>
       </header>
 
-      <main>
-        <div className="products-grid">
-          {products.slice(0, 12).map(product => (
-            <ProductCard key={product.id} product={product} onViewProduct={handleViewProduct} />
-          ))}
-        </div>
-      </main>
+      <div className="main-content">
+        <aside className="sidebar">
+          <UserSwitcher />
+          <UserAttributes />
+        </aside>
+
+        <main className="products-section">
+          <div className="products-grid">
+            {products.slice(0, 12).map(product => (
+              <ProductCard key={product.id} product={product} onViewProduct={handleViewProduct} />
+            ))}
+          </div>
+        </main>
+      </div>
 
       <ProductModal product={selectedProduct} onClose={closeProductModal} />
     </div>
+  );
+}
+
+function App() {
+  return (
+    <UserProvider>
+      <AppContent />
+    </UserProvider>
   );
 }
 

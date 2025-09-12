@@ -1,4 +1,4 @@
-import { newTracker, trackPageView } from '@snowplow/browser-tracker';
+import { newTracker, setUserId, clearUserData } from '@snowplow/browser-tracker';
 import { SnowplowEcommercePlugin, trackAddToCart, trackProductView } from '@snowplow/browser-plugin-snowplow-ecommerce';
 import {
   SignalsInterventionsPlugin,
@@ -13,25 +13,47 @@ interface Product {
   price: number;
 }
 
-export const initializeSnowplow = () => {
-  newTracker('sp', 'https://collector-sales-aws.snowplow.io', {
-    appId: 'ai_demo',
-    discoverRootDomain: true,
-    cookieSameSite: 'Lax',
-    contexts: {
-      webPage: true
-    },
-    plugins: [
-      SnowplowEcommercePlugin(),
-      SignalsInterventionsPlugin(),
-    ],
-  });
+const SIGNALS_API_URL = process.env.REACT_APP_SIGNALS_API_URL || 'https://your-signals-endpoint.signals.snowplowanalytics.com';
+const SNOWPLOW_COLLECTOR_URL = process.env.REACT_APP_SNOWPLOW_COLLECTOR_URL || 'https://collector-sales-aws.snowplow.io';
 
-  trackPageView();
+let isInitialized = false;
 
-  subscribeToInterventions({
-    endpoint: 'd0a9ba0f-893a-445f-91a5-a1abf1359d34.svc.snplow.net',
-  });
+export const initializeSnowplow = (userId?: string) => {
+  if (!isInitialized) {
+    newTracker('sp', SNOWPLOW_COLLECTOR_URL, {
+      appId: 'ai_demo',
+      discoverRootDomain: true,
+      cookieSameSite: 'Lax',
+      contexts: {
+        webPage: true
+      },
+      plugins: [
+        SnowplowEcommercePlugin(),
+        SignalsInterventionsPlugin(),
+      ],
+    });
+
+    subscribeToInterventions({
+      endpoint: SIGNALS_API_URL,
+    });
+
+    isInitialized = true;
+  }
+
+  // Set user ID if provided
+  if (userId) {
+    setUserId(userId);
+  }
+};
+
+export const updateSnowplowUser = (userId: string, userEmail?: string) => {
+  console.log('Updating Snowplow user:', userId);
+  
+  // Clear previous user data
+  clearUserData();
+  
+  // Set new user ID
+  setUserId(userId);
 };
 
 export const trackProductViewEvent = (product: Product) => {
