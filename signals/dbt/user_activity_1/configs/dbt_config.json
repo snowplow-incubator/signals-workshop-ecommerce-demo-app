@@ -62,7 +62,7 @@
         "last_value_attributes": [
             {
                 "daily_agg_column_name": "last_category",
-                "column_name": "last_product_category_purchased",
+                "column_name": "last_product_category_interaction",
                 "period": null,
                 "aggregation_type": "last"
             }

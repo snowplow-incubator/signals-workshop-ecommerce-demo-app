@@ -51,7 +51,7 @@ with  aggregations as (
     , last_value(last_category) over (
                 partition by attribute_key
                 order by last_event_tstamp ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
-            ) as last_product_category_purchased
+            ) as last_product_category_interaction
   
 
 
@@ -78,7 +78,7 @@ select
 
   -- user lasts
   
-    , w.last_product_category_purchased
+    , w.last_product_category_interaction
   
   -- unique_list_attributes
   

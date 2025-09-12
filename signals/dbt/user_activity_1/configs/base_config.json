@@ -83,7 +83,7 @@
                 "step_type": "attribute_aggregation",
                 "enabled": true,
                 "aggregation": "last",
-                "column_name": "last_product_category_purchased",
+                "column_name": "last_product_category_interaction",
                 "modeling_criteria": {
                     "all": [],
                     "any": []
