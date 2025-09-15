@@ -178,7 +178,7 @@ export default {
         if (userId) {
           userAttributes = {
             ...userAttributes,
-            ...(await fetchUserAttributes(authToken, env.SIGNALS_API_URL, 'batch_attributes', { user_id: [userId] }))
+            ...(await fetchUserAttributes(authToken, env.SIGNALS_API_URL, 'batch_service', { user_id: [userId] }))
           }
         }
         const domainUserId = url.searchParams.get('domain_userid');
