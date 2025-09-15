@@ -25,7 +25,7 @@ function UserSwitcher({ className = '' }: UserSwitcherProps) {
   return (
     <div className={`user-switcher ${className}`}>
       <div className="user-switcher-header">
-        <h3>👤 Current User</h3>
+        <h3>⚙️ Admin: Current User</h3>
       </div>
 
       <div className="user-switcher-dropdown">
@@ -46,7 +46,7 @@ function UserSwitcher({ className = '' }: UserSwitcherProps) {
         {isOpen && (
           <div className="user-switcher-menu">
             <div className="user-switcher-menu-header">
-              Switch User Profile
+              Admin: Switch Profile
             </div>
             {users.map((user) => (
               <button
