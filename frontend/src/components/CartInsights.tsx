@@ -22,7 +22,7 @@ function CartInsights({ className = '' }: CartInsightsProps) {
   }
 
   const cartItems = attributes?.count_add_to_cart || 0;
-  const totalValue = attributes?.total_cart_value || 0;
+  const totalValue = attributes?.sum_transaction_value_ltv || 0;
   const avgCartValue = attributes?.average_cart_value || 0;
   const productViews = attributes?.count_product_views || 0;
 
@@ -101,11 +101,11 @@ function CartInsights({ className = '' }: CartInsightsProps) {
       });
     }
 
-    if (avgCartValue > 50 && customerTier !== 'platinum') {
+    if (avgCartValue > 50 && customerTier !== 'Gold') {
       const savings = (avgCartValue * 0.1).toFixed(2);
       recommendations.push({
         title: 'Membership Savings',
-        message: `You could save $${savings} per order with premium membership`,
+        message: `You could save $${savings} per order with ${customerTier === 'Silver' ? 'Gold' : 'Silver'} membership`,
         action: 'Learn More',
         type: 'upgrade'
       });

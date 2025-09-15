@@ -11,10 +11,12 @@ export interface UserAttributesError {
 export interface UserAttributes {
   main_interest: string | null;
   recommendation_score: number | null;
-  loyalty_segment: string | null;
+  loyalty_segment: 'Gold' | 'Silver' | 'Bronze' | null;
   count_product_views: number | null;
   count_add_to_cart: number | null;
   total_cart_value: number | null;
+  sum_transaction_value_ltv: number | null;
+  last_product_category_interaction: string | null;
 }
 
 // Configuration for the worker endpoint

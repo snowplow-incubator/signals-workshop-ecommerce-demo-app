@@ -876,7 +876,7 @@ body {
   background: rgba(255,255,255,0.3);
 }
 
-.offer-button.platinum {
+.offer-button.gold {
   background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
   color: #333;
   border: none;

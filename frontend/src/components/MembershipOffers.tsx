@@ -23,59 +23,50 @@ function MembershipOffers({ className = '' }: MembershipOffersProps) {
 
   const getTierInfo = () => {
     switch (customerTier) {
-      case 'platinum':
-        return {
-          icon: '💎',
-          title: 'Platinum Member',
-          color: '#9C27B0',
-          benefits: ['Free same-day delivery', 'Exclusive platinum products', '30% off premium items'],
-          offer: 'Enjoy your Platinum privileges!'
-        };
-      case 'gold':
+      case 'Gold':
         return {
           icon: '🥇',
           title: 'Gold Member',
-          color: '#FF9800',
-          benefits: ['Free 2-day shipping', 'Early access to sales', '20% off selected items'],
-          offer: 'Upgrade to Platinum for exclusive benefits!'
+          color: '#FFD700',
+          benefits: ['Free express shipping', 'Priority customer service', '25% off premium items', 'Exclusive product access'],
+          offer: 'Enjoy your Gold member privileges!'
         };
-      case 'silver':
+      case 'Silver':
         return {
           icon: '🥈',
           title: 'Silver Member',
-          color: '#607D8B',
-          benefits: ['Free shipping on $50+', '10% member discount', 'Birthday rewards'],
-          offer: 'Spend $500 more to reach Gold status!'
+          color: '#C0C0C0',
+          benefits: ['Free shipping on $75+', '15% member discount', 'Birthday rewards', 'Early sale access'],
+          offer: 'Keep shopping to reach Gold status!'
         };
-      case 'bronze':
+      case 'Bronze':
         return {
           icon: '🥉',
           title: 'Bronze Member',
-          color: '#8D6E63',
-          benefits: ['Member-only deals', '5% back in rewards', 'Free returns'],
-          offer: 'Spend $200 more to reach Silver status!'
+          color: '#CD7F32',
+          benefits: ['Member-only deals', '10% back in rewards', 'Free returns', 'Member newsletter'],
+          offer: 'Continue shopping to unlock Silver benefits!'
         };
       default:
         return {
           icon: '✨',
           title: 'Welcome!',
           color: '#4CAF50',
-          benefits: ['Join our membership program', 'Earn rewards on purchases', 'Exclusive member pricing'],
+          benefits: ['Join our loyalty program', 'Earn rewards on purchases', 'Exclusive member pricing'],
           offer: 'Make your first purchase to unlock rewards!'
         };
     }
   };
 
   const tierInfo = getTierInfo();
-  const totalSpent = attributes?.total_cart_value || 0;
+  const totalSpent = attributes?.sum_transaction_value_ltv || 0;
   const nextTierThreshold = getNextTierThreshold();
 
   function getNextTierThreshold() {
     switch (customerTier) {
-      case 'new': return 500;
-      case 'bronze': return 500;
-      case 'silver': return 2000;
-      case 'gold': return 5000;
+      case 'Bronze': return 1000;
+      case 'Silver': return 5000;
+      case 'Gold': return null; // Gold is highest
       default: return null;
     }
   }
@@ -99,7 +90,7 @@ function MembershipOffers({ className = '' }: MembershipOffersProps) {
         )}
       </div>
 
-      {nextTierThreshold && customerTier !== 'platinum' && (
+      {nextTierThreshold && customerTier !== 'Gold' && (
         <div className="tier-progress">
           <div className="progress-bar">
             <div 
@@ -136,8 +127,8 @@ function MembershipOffers({ className = '' }: MembershipOffersProps) {
           </div>
           <div className="offer-content">
             <p>{tierInfo.offer}</p>
-            {customerTier === 'platinum' ? (
-              <button className="offer-button platinum">
+            {customerTier === 'Gold' ? (
+              <button className="offer-button gold">
                 Browse Exclusive Collection
               </button>
             ) : (

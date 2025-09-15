@@ -5,7 +5,8 @@ import { userAttributesService } from '../services/userAttributes';
 export interface UserAttributesData {
   count_product_views?: number;
   count_add_to_cart?: number;
-  total_cart_value?: number;
+  sum_transaction_value_ltv?: number;
+  loyalty_segment?: 'Gold' | 'Silver' | 'Bronze' | null;
   main_interest?: string;
   engagement_score?: number;
   average_cart_value?: number;
@@ -18,7 +19,7 @@ export interface PersonalizationContextType {
   error: string | null;
   refreshAttributes: () => Promise<void>;
   isHighValueCustomer: boolean;
-  customerTier: 'bronze' | 'silver' | 'gold' | 'platinum' | 'new';
+  customerTier: 'Bronze' | 'Silver' | 'Gold' | 'new';
   recommendedCategory: string | null;
 }
 
@@ -42,17 +43,23 @@ export function PersonalizationProvider({ children }: PersonalizationProviderPro
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Calculate customer tier based on total cart value
-  const getCustomerTier = (totalCartValue?: number): 'bronze' | 'silver' | 'gold' | 'platinum' | 'new' => {
-    if (!totalCartValue || totalCartValue === 0) return 'new';
-    if (totalCartValue >= 5000) return 'platinum';
-    if (totalCartValue >= 2000) return 'gold';
-    if (totalCartValue >= 500) return 'silver';
-    return 'bronze';
+  // Use loyalty_segment from attributes or fall back to LTV calculation
+  const getCustomerTier = (): 'Bronze' | 'Silver' | 'Gold' | 'new' => {
+    // Prefer the loyalty_segment attribute if available
+    if (attributes?.loyalty_segment) {
+      return attributes.loyalty_segment;
+    }
+    
+    // Fallback to LTV-based calculation
+    const ltv = attributes?.sum_transaction_value_ltv;
+    if (!ltv || ltv === 0) return 'new';
+    if (ltv >= 2000) return 'Gold';
+    if (ltv >= 500) return 'Silver';
+    return 'Bronze';
   };
 
-  const customerTier = getCustomerTier(attributes?.total_cart_value);
-  const isHighValueCustomer = attributes?.total_cart_value ? attributes.total_cart_value >= 1000 : false;
+  const customerTier = getCustomerTier();
+  const isHighValueCustomer = customerTier !== 'new'; // Show membership offers for all loyalty program members
   const recommendedCategory = attributes?.main_interest || null;
 
   const refreshAttributes = async (showLoading = true) => {
