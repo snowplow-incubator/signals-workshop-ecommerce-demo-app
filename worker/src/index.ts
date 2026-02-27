@@ -60,6 +60,41 @@ async function fetchAuthToken(
   }
 }
 
+// Fetch narrative from Snowplow Signals API
+async function fetchNarrative(
+  authToken: string,
+  signalsApiUrl: string,
+  domainUserId: string,
+  narrativeName: string,
+): Promise<Record<string, any>> {
+  const apiUrl = `${signalsApiUrl}/api/v1/narratives/domain_userid/${encodeURIComponent(domainUserId)}/${encodeURIComponent(narrativeName)}`;
+
+  try {
+    const response = await fetch(apiUrl, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+        "Content-Type": "application/json; charset=utf-8",
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Signals narratives API error (${response.status}): ${errorText}`);
+      throw new Error(
+        `Failed to fetch narrative: ${response.status} ${response.statusText}`,
+      );
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching narrative from Signals API:", error);
+    throw new Error(
+      `Narrative request failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
+  }
+}
+
 // Fetch user attributes from Snowplow Signals API
 async function fetchUserAttributes(
   authToken: string,
@@ -252,12 +287,73 @@ export default {
         );
       }
 
+      if (url.pathname === "/narratives") {
+        if (request.method !== "GET") {
+          return addCORSHeaders(
+            new Response(JSON.stringify({ error: "Method not allowed" }), {
+              status: 405,
+              headers: { "Content-Type": "application/json" },
+            }),
+          );
+        }
+
+        if (
+          !env.API_KEY ||
+          !env.API_KEY_ID ||
+          !env.ORG_ID ||
+          !env.SIGNALS_API_URL
+        ) {
+          return addCORSHeaders(
+            new Response(
+              JSON.stringify({
+                error:
+                  "API credentials not configured (missing API_KEY, API_KEY_ID, ORG_ID, or SIGNALS_API_URL)",
+              }),
+              {
+                status: 500,
+                headers: { "Content-Type": "application/json" },
+              },
+            ),
+          );
+        }
+
+        const domainUserId = url.searchParams.get("domain_userid");
+        if (!domainUserId) {
+          return addCORSHeaders(
+            new Response(
+              JSON.stringify({ error: "Missing required query parameter: domain_userid" }),
+              {
+                status: 400,
+                headers: { "Content-Type": "application/json" },
+              },
+            ),
+          );
+        }
+
+        const narrativeName = url.searchParams.get("narrative_name") || "ecom_cart_recovery";
+
+        const authToken = await getAuthToken(env);
+        const narrative = await fetchNarrative(
+          authToken,
+          env.SIGNALS_API_URL,
+          domainUserId,
+          narrativeName,
+        );
+
+        return addCORSHeaders(
+          new Response(JSON.stringify(narrative), {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          }),
+        );
+      }
+
       // Default 404 response
       return addCORSHeaders(
         new Response(
           JSON.stringify({
             error: "Not found",
-            availableEndpoints: ["/attributes"],
+            availableEndpoints: ["/attributes", "/narratives"],
           }),
           {
             status: 404,

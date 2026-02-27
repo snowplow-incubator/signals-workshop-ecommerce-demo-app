@@ -57,6 +57,13 @@ export const updateSnowplowUser = (userId: string, userEmail?: string) => {
   setUserId(userId);
 };
 
+export const resetDomainUserId = () => {
+  // Clears all Snowplow cookies/localStorage, causing the tracker to generate
+  // a fresh domain_userid on the next event.
+  clearUserData({ preserveSession: false, preserveUser: false });
+  console.log('domain_userid reset — new ID will be assigned on next event');
+};
+
 export const trackProductViewEvent = (product: Product) => {
   console.log('trackProductView', product);
   trackProductView({

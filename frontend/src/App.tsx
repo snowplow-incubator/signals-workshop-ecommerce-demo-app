@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { initializeSnowplow, trackProductViewEvent, trackAddToCartEvent, updateSnowplowUser } from './snowplow';
+import React, { useState, useEffect, useCallback } from 'react';
+import { initializeSnowplow, trackProductViewEvent, trackAddToCartEvent } from './snowplow';
 import UserSwitcher from './components/UserSwitcher';
-import MembershipOffers from './components/MembershipOffers';
-import CartInsights from './components/CartInsights';
-import { UserProvider, useUser } from './contexts/UserContext';
-import { PersonalizationProvider, usePersonalization } from './contexts/PersonalizationContext';
+import InterventionModal, { ModalIntervention } from './components/InterventionModal';
+import { PersonalizationProvider } from './contexts/PersonalizationContext';
 
 import { addInterventionHandlers, Intervention } from '@snowplow/signals-browser-plugin';
 
@@ -20,29 +18,15 @@ interface Product {
   rating: number;
 }
 
-interface BannerIntervention {
-  type: string;
-  message: string;
-  code?: string;
-}
-
 interface ProductModalProps {
   product: Product | null;
   onClose: () => void;
+  onAddToCart: (product: Product) => void;
 }
 
-function ProductModal({ product, onClose }: ProductModalProps) {
-  const handleAddToCart = () => {
-    if (product) {
-      trackAddToCartEvent(product);
-      alert(`Added ${product.title} to cart!`);
-    }
-  };
-
+function ProductModal({ product, onClose, onAddToCart }: ProductModalProps) {
   const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
+    if (e.target === e.currentTarget) onClose();
   };
 
   if (!product) return null;
@@ -55,11 +39,7 @@ function ProductModal({ product, onClose }: ProductModalProps) {
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
         <div className="modal-content">
-          <img
-            src={product.thumbnail}
-            alt={product.title}
-            className="product-modal-image"
-          />
+          <img src={product.thumbnail} alt={product.title} className="product-modal-image" />
           <h1 className="product-modal-title">{product.title}</h1>
           <div className="product-modal-price">${product.price}</div>
           <p className="product-modal-description">{product.description}</p>
@@ -85,7 +65,7 @@ function ProductModal({ product, onClose }: ProductModalProps) {
 
           <div className="product-modal-actions">
             <button className="btn btn-secondary" onClick={onClose}>Close</button>
-            <button className="btn btn-primary" onClick={handleAddToCart}>Add to Cart</button>
+            <button className="btn btn-primary" onClick={() => onAddToCart(product)}>Add to Cart</button>
           </div>
         </div>
       </div>
@@ -93,23 +73,16 @@ function ProductModal({ product, onClose }: ProductModalProps) {
   );
 }
 
-interface InterventionBannerProps {
-  intervention: BannerIntervention | null;
-  onClose: () => void;
+interface CartToastProps {
+  productName: string | null;
 }
 
-function InterventionBanner({ intervention, onClose }: InterventionBannerProps) {
-  const handleClick = () => {
-    onClose();
-  };
-
-  if (!intervention) return null;
-
+function CartToast({ productName }: CartToastProps) {
+  if (!productName) return null;
   return (
-    <div className={`intervention-banner intervention-${intervention.type}`}>
-      <span>{intervention.message}</span>
-      {intervention.code && <span> Use code: <strong>{intervention.code}</strong></span>}
-      <button className="intervention-close" onClick={handleClick}>×</button>
+    <div className="cart-toast">
+      <span className="cart-toast-icon">🛒</span>
+      <span><strong>{productName}</strong> added to cart</span>
     </div>
   );
 }
@@ -117,26 +90,13 @@ function InterventionBanner({ intervention, onClose }: InterventionBannerProps) 
 interface ProductCardProps {
   product: Product;
   onViewProduct: (product: Product) => void;
+  onAddToCart: (product: Product) => void;
 }
 
-function ProductCard({ product, onViewProduct }: ProductCardProps) {
-  const handleViewProduct = () => {
-    trackProductViewEvent(product);
-    onViewProduct(product);
-  };
-
-  const handleAddToCart = () => {
-    trackAddToCartEvent(product);
-    alert(`Added ${product.title} to cart!`);
-  };
-
+function ProductCard({ product, onViewProduct, onAddToCart }: ProductCardProps) {
   return (
-    <div className="product-card" onClick={handleViewProduct}>
-      <img
-        src={product.thumbnail}
-        alt={product.title}
-        className="product-image"
-      />
+    <div className="product-card" onClick={() => { trackProductViewEvent(product); onViewProduct(product); }}>
+      <img src={product.thumbnail} alt={product.title} className="product-image" />
       <h3 className="product-title">{product.title}</h3>
       <p className="product-description">{product.description.substring(0, 100)}...</p>
       <div className="product-price">${product.price}</div>
@@ -144,7 +104,7 @@ function ProductCard({ product, onViewProduct }: ProductCardProps) {
         className="btn btn-primary"
         onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
           e.stopPropagation();
-          handleAddToCart();
+          onAddToCart(product);
         }}
       >
         Add to Cart
@@ -153,18 +113,34 @@ function ProductCard({ product, onViewProduct }: ProductCardProps) {
   );
 }
 
+const MODAL_INTERVENTION_NAMES = new Set<ModalIntervention['type']>([
+  'high_purchase_intent',
+  'furniture_interest',
+  'fragrance_interest',
+]);
+
+function isModalInterventionType(name: string): name is ModalIntervention['type'] {
+  return MODAL_INTERVENTION_NAMES.has(name as ModalIntervention['type']);
+}
+
 function AppContent() {
-  const { currentUser } = useUser();
-  const { recommendedCategory, isHighValueCustomer } = usePersonalization();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
-  const [intervention, setIntervention] = useState<BannerIntervention | null>(null);
+  const [intervention, setIntervention] = useState<ModalIntervention | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [cartToast, setCartToast] = useState<string | null>(null);
+  const toastTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleAddToCart = useCallback((product: Product) => {
+    trackAddToCartEvent(product);
+
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setCartToast(product.title);
+    toastTimer.current = setTimeout(() => setCartToast(null), 2500);
+  }, []);
 
   useEffect(() => {
-    // Initialize Snowplow with current user
-    initializeSnowplow(currentUser?.id);
-    // Initialize Snowplow tracking
+    initializeSnowplow();
 
     fetch('https://dummyjson.com/products')
       .then(response => response.json())
@@ -178,74 +154,22 @@ function AppContent() {
       });
 
     addInterventionHandlers({
-      handler: (intervention: Intervention) => {
-        console.log('intervention received!', intervention);
-
-        if (intervention.name === 'cart_abandonment') {
-          setIntervention({ type: 'cart_abandonment', message: 'Don\'t forget your items in cart!' });
+      handler: (incoming: Intervention) => {
+        console.log('intervention received!', incoming);
+        if (isModalInterventionType(incoming.name)) {
+          setIntervention({ type: incoming.name });
+        } else {
+          console.log('unknown intervention', incoming);
         }
-        else if (intervention.name === 'discount') {
-          setIntervention({ type: 'discount', message: '10% off your next purchase!', code: 'SAVE10' });
-        }
-        else if (intervention.name === 'free_shipping') {
-          setIntervention({ type: 'free_shipping', message: 'Free shipping on orders over $100!', code: 'FREE' });
-        }
-        else {
-          console.log('unknown intervention', intervention);
-        }
-
-        setTimeout(() => {
-          setIntervention(null);
-        }, 60000);
       },
     });
-  }, [currentUser]);
-
-  // Listen for user changes and update Snowplow
-  useEffect(() => {
-    const handleUserChange = (event: CustomEvent) => {
-      const { user } = event.detail;
-      updateSnowplowUser(user.id, user.email);
-    };
-
-    window.addEventListener('userChanged', handleUserChange as EventListener);
 
     return () => {
-      window.removeEventListener('userChanged', handleUserChange as EventListener);
+      if (toastTimer.current) clearTimeout(toastTimer.current);
     };
   }, []);
 
-  const closeIntervention = () => {
-    setIntervention(null);
-  };
-
-  const handleViewProduct = (product: Product) => {
-    setSelectedProduct(product);
-  };
-
-  const closeProductModal = () => {
-    setSelectedProduct(null);
-  };
-
-  // Filter products based on user's main interest
-  const getFilteredProducts = () => {
-    if (!recommendedCategory) return products.slice(0, 12);
-    
-    // Try to match category with user's main interest
-    const filtered = products.filter(product => 
-      product.category.toLowerCase().includes(recommendedCategory.toLowerCase()) ||
-      product.title.toLowerCase().includes(recommendedCategory.toLowerCase())
-    );
-    
-    // If we have enough filtered products, show them; otherwise mix with general products
-    if (filtered.length >= 6) {
-      return [...filtered.slice(0, 8), ...products.filter(p => !filtered.includes(p)).slice(0, 4)];
-    }
-    
-    return [...filtered, ...products.filter(p => !filtered.includes(p))].slice(0, 12);
-  };
-
-  const displayedProducts = getFilteredProducts();
+  const displayedProducts = products.slice(0, 12);
 
   if (loading) {
     return (
@@ -257,46 +181,47 @@ function AppContent() {
 
   return (
     <div className="app">
-      <InterventionBanner intervention={intervention} onClose={closeIntervention} />
+      <CartToast productName={cartToast} />
 
       <header className="header">
         <h1>🛍️ Signals Workshop E-Shop</h1>
         <p>Demo application showcasing Snowplow Signals personalization</p>
-        {recommendedCategory && (
-          <div className="personalization-note">
-            <span className="personalization-icon">✨</span>
-            <span>Showing products tailored to your interest in {recommendedCategory}</span>
-          </div>
-        )}
       </header>
 
       <div className="main-content">
         <aside className="sidebar">
           <UserSwitcher />
-          {isHighValueCustomer ? <MembershipOffers /> : <CartInsights />}
         </aside>
 
         <main className="products-section">
           <div className="products-grid">
             {displayedProducts.map(product => (
-              <ProductCard key={product.id} product={product} onViewProduct={handleViewProduct} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                onViewProduct={setSelectedProduct}
+                onAddToCart={handleAddToCart}
+              />
             ))}
           </div>
         </main>
       </div>
 
-      <ProductModal product={selectedProduct} onClose={closeProductModal} />
+      <ProductModal
+        product={selectedProduct}
+        onClose={() => setSelectedProduct(null)}
+        onAddToCart={(p) => { handleAddToCart(p); setSelectedProduct(null); }}
+      />
+      <InterventionModal intervention={intervention} onClose={() => setIntervention(null)} />
     </div>
   );
 }
 
 function App() {
   return (
-    <UserProvider>
-      <PersonalizationProvider>
-        <AppContent />
-      </PersonalizationProvider>
-    </UserProvider>
+    <PersonalizationProvider>
+      <AppContent />
+    </PersonalizationProvider>
   );
 }
 
